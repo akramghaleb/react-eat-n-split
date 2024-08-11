@@ -29,6 +29,7 @@ function Button({ onClick, children }) {
 export default function App() {
   const [friends, setFriends] = useState(initialFriends)
   const [showAddFriend, setShowAddFriend] = useState(false)
+  const [selectedFriend, setSelectedFriend] = useState(null)
 
   function handleShowAddFriend() {
     setShowAddFriend(show => !show)
@@ -39,29 +40,44 @@ export default function App() {
     setShowAddFriend(false)
   }
 
+  function handleSelection(friend) {
+    //setSelectedFriend(friend)
+    setSelectedFriend(cur => cur?.id === friend.id ? null : friend)
+    setShowAddFriend(false)
+  }
+
   return <div className="app">
     <div className="sidebar">
-      <FriendsList friends={friends} />
+      <FriendsList friends={friends}
+        selectedFriend={selectedFriend}
+        onSelection={handleSelection} />
+
       {showAddFriend && <FormAddFriend onAddFriend={handleAddFriend} />}
+
       <Button onClick={handleShowAddFriend}>
         {showAddFriend ? 'Close' : 'Add friend'}
       </Button>
     </div>
 
-    <FormSplitBill />
+    {selectedFriend && <FormSplitBill selectedFriend={selectedFriend} />}
   </div>;
 }
 
-function FriendsList({ friends }) {
+function FriendsList({ friends, onSelection, selectedFriend }) {
   return <ul>
     {friends.map(friend => (
-      <Friend key={friend.id} friend={friend} />  // Passing friend data as prop to Friend component.  // key prop is used to uniquely identify each element in the array.  // Arrow function is used for concise rendering.  // The Friend component is reused for each friend in the friends array.  // The friend data is passed as a prop to the Friend component.  // The Friend component renders a li element containing the friend's name.  // The map function creates a new array with the Friend components, each with the corresponding friend data.  // The resulting array is then rendered as a list.  // The FriendsList component renders an unordered list containing the Friend components for each friend in the initialFriends array.  // The FriendsList component is a functional component.  // The App component renders the FriendsList component.  // The App component is a functional component.  // The App component renders a div with a class name of "
+      <Friend key={friend.id}
+        friend={friend}
+        selectedFriend={selectedFriend}
+        onSelection={onSelection} />  // Passing friend data as prop to Friend component.  // key prop is used to uniquely identify each element in the array.  // Arrow function is used for concise rendering.  // The Friend component is reused for each friend in the friends array.  // The friend data is passed as a prop to the Friend component.  // The Friend component renders a li element containing the friend's name.  // The map function creates a new array with the Friend components, each with the corresponding friend data.  // The resulting array is then rendered as a list.  // The FriendsList component renders an unordered list containing the Friend components for each friend in the initialFriends array.  // The FriendsList component is a functional component.  // The App component renders the FriendsList component.  // The App component is a functional component.  // The App component renders a div with a class name of "
     ))}
   </ul>
 }
 
-function Friend({ friend }) {
-  return <li>
+function Friend({ friend, onSelection, selectedFriend }) {
+  const isSelected = friend?.id === selectedFriend?.id
+
+  return <li className={isSelected ? "selected" : ""}>
     <img src={friend.image} alt={friend.name} />
     <h3>{friend.name}</h3>
     {friend.balance < 0 &&
@@ -83,7 +99,9 @@ function Friend({ friend }) {
         </p>
       )}
 
-    <Button>Select</Button>
+    <Button onClick={() => onSelection(friend)}>
+      {isSelected ? "Close" : "Select"}
+    </Button>
   </li>
 }
 
@@ -127,9 +145,9 @@ function FormAddFriend({ onAddFriend }) {
   </form>
 }
 
-function FormSplitBill() {
+function FormSplitBill({ selectedFriend }) {
   return <form className="form-split-bill">
-    <h2>Split a bill with X</h2>
+    <h2>Split a bill with {selectedFriend.name}</h2>
 
     <label>💰 Bill value</label>
     <input type='text' />
@@ -137,13 +155,13 @@ function FormSplitBill() {
     <label>🕴️ Your expense</label>
     <input type='text' />
 
-    <label>👥 X's expense</label>
+    <label>👥 {selectedFriend.name}'s expense</label>
     <input type='text' disabled />
 
     <label>🤑 Who is paying the bill</label>
     <select>
       <option value="user">You</option>
-      <option value="friend">X</option>
+      <option value="friend">{selectedFriend.name}</option>
     </select>
 
     <Button>Split bill</Button>
